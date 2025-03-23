@@ -1,4 +1,4 @@
--- MCP Server Manager Database Schema
+-- VibeControl Database Schema
 
 -- Servers table to store server information
 CREATE TABLE IF NOT EXISTS servers (
@@ -19,7 +19,7 @@ CREATE TABLE IF NOT EXISTS servers (
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
--- Server logs table to store logs separately (instead of keeping in the server object)
+-- Server logs table to store logs separately
 CREATE TABLE IF NOT EXISTS server_logs (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     server_id TEXT NOT NULL,
@@ -39,4 +39,4 @@ AFTER UPDATE ON servers
 FOR EACH ROW
 BEGIN
     UPDATE servers SET updated_at = CURRENT_TIMESTAMP WHERE id = NEW.id;
-END;
+END; 

@@ -1,5 +1,6 @@
 const { app, BrowserWindow, ipcMain } = require('electron');
 const path = require('path');
+const os = require('os');
 const DatabaseStorage = require('./storage/database');
 const ServerManager = require('./server-manager/manager');
 
@@ -37,11 +38,18 @@ function createWindow() {
   mainWindow = new BrowserWindow({
     width: 1920,
     height: 1080,
+    show: false, // Don't show the window until it's ready
+    backgroundColor: '#1a0f1f', // Dark purple background (matches our theme)
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
       contextIsolation: true,
-      nodeIntegration: false
+      nodeIntegration: true
     }
+  });
+
+  // Wait for the content to be ready before showing the window
+  mainWindow.once('ready-to-show', () => {
+    mainWindow.show();
   });
 
   // In development, load from Vite dev server
@@ -77,11 +85,11 @@ app.whenReady().then(() => {
   storage = new DatabaseStorage(app.getPath('userData'));
   
   // Initialize server manager with storage
-  const serversDir = path.join(app.getPath('userData'), 'mcp-servers');
-  console.log('Servers will be stored in:', serversDir);
+  const baseDir = os.homedir(); // Default to user's home directory
+  console.log('Base directory for servers:', baseDir);
   
   serverManager = new ServerManager(storage, {
-    serversDir: serversDir
+    baseDir: baseDir
   });
   
   // Setup IPC handlers

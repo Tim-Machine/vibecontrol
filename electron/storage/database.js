@@ -1,41 +1,42 @@
 const sqlite3 = require('sqlite3').verbose();
 const path = require('path');
 const fs = require('fs');
+const { v4: uuidv4 } = require('uuid');
 
 class DatabaseStorage {
   constructor(userDataPath) {
-    // Ensure database directory exists
-    if (!fs.existsSync(userDataPath)) {
-      fs.mkdirSync(userDataPath, { recursive: true });
+    this.dbPath = path.join(userDataPath, 'vibecontrol.db');
+    
+    // Create database directory if it doesn't exist
+    const dbDir = path.dirname(this.dbPath);
+    if (!fs.existsSync(dbDir)) {
+      fs.mkdirSync(dbDir, { recursive: true });
     }
-    
-    // Set up database file path
-    this.dbPath = path.join(userDataPath, 'mcp-server-manager.db');
-    
-    // Initialize the database connection
+
+    // Initialize database
     this.db = new sqlite3.Database(this.dbPath);
-    
-    // Initialize the database schema
     this.initializeDatabase();
   }
   
-  initializeDatabase() {
-    // Read the schema from the SQL file
-    const schemaPath = path.join(process.cwd(), 'database.sql');
-    const schema = fs.readFileSync(schemaPath, 'utf8');
+  async initializeDatabase() {
+    // Read schema from file
+    const schema = fs.readFileSync(path.join(__dirname, 'database.sql'), 'utf8');
     
-    // Execute the schema to create tables
-    this.db.exec(schema, (err) => {
-      if (err) {
-        console.error('Error initializing database:', err);
-      } else {
+    // Only initialize if database doesn't exist
+    if (!fs.existsSync(this.dbPath)) {
+      // Execute schema
+      this.db.exec(schema, (err) => {
+        if (err) {
+          console.error('Error initializing database:', err);
+          return;
+        }
         console.log('Database initialized successfully');
-      }
-    });
+      });
+    }
   }
   
   // Get all servers
-  getServers() {
+  async getServers() {
     return new Promise((resolve, reject) => {
       const sql = `SELECT * FROM servers`;
       
@@ -51,10 +52,12 @@ class DatabaseStorage {
         rows.forEach(row => {
           servers[row.id] = {
             id: row.id,
+            name: row.name,
             gitUrl: row.git_url,
             dir: row.directory_path,
+            dataDir: row.data_path,
+            logsDir: row.logs_path,
             projectType: row.project_type,
-            name: row.name,
             config: JSON.parse(row.config || '{}'),
             env: JSON.parse(row.env_vars || '{}'),
             runCommand: row.run_command,
@@ -69,105 +72,85 @@ class DatabaseStorage {
     });
   }
   
-  // Update or create a server
-  updateServer(serverId, serverData) {
+  // Add a new server
+  async addServer(serverData) {
     return new Promise((resolve, reject) => {
-      // Check if server already exists
-      const checkSql = 'SELECT COUNT(*) as count FROM servers WHERE id = ?';
+      const serverId = uuidv4();
+      const insertSql = `
+        INSERT INTO servers (
+          id, name, git_url, directory_path, data_path, logs_path,
+          project_type, config, env_vars, run_command, entry_point,
+          is_built, status
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      `;
       
-      this.db.get(checkSql, [serverId], (err, result) => {
+      this.db.run(insertSql, [
+        serverId,
+        serverData.name,
+        serverData.gitUrl,
+        serverData.dir,
+        serverData.dataDir,
+        serverData.logsDir,
+        serverData.projectType || null,
+        JSON.stringify(serverData.config || {}),
+        JSON.stringify(serverData.env || {}),
+        serverData.runCommand || null,
+        serverData.entryPoint || null,
+        serverData.isBuilt ? 1 : 0,
+        serverData.status || 'stopped'
+      ], function(err) {
         if (err) {
-          console.error('Error checking server existence:', err);
+          console.error('Error creating server:', err);
           reject(err);
           return;
         }
-        
-        const exists = result.count > 0;
-        
-        if (exists) {
-          // Update existing server
-          const updateSql = `
-            UPDATE servers SET
-              git_url = ?,
-              directory_path = ?,
-              project_type = ?,
-              name = ?,
-              config = ?,
-              env_vars = ?,
-              run_command = ?,
-              entry_point = ?,
-              is_built = ?,
-              status = ?
-            WHERE id = ?
-          `;
-          
-          this.db.run(updateSql, [
-            serverData.gitUrl,
-            serverData.dir,
-            serverData.projectType,
-            serverData.name,
-            JSON.stringify(serverData.config || {}),
-            JSON.stringify(serverData.env || {}),
-            serverData.runCommand,
-            serverData.entryPoint,
-            serverData.isBuilt ? 1 : 0,
-            serverData.status,
-            serverId
-          ], function(err) {
-            if (err) {
-              console.error('Error updating server:', err);
-              reject(err);
-              return;
-            }
-            
-            // Update logs if provided
-            if (serverData.logs && serverData.logs.length > 0) {
-              // Insert new logs
-              DatabaseStorage.prototype.addLogs(serverId, serverData.logs)
-                .then(() => resolve())
-                .catch(reject);
-            } else {
-              resolve();
-            }
-          });
-        } else {
-          // Insert new server
-          const insertSql = `
-            INSERT INTO servers (
-              id, git_url, directory_path, project_type, name, 
-              config, env_vars, run_command, entry_point, is_built, status
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-          `;
-          
-          this.db.run(insertSql, [
-            serverId,
-            serverData.gitUrl,
-            serverData.dir,
-            serverData.projectType,
-            serverData.name,
-            JSON.stringify(serverData.config || {}),
-            JSON.stringify(serverData.env || {}),
-            serverData.runCommand,
-            serverData.entryPoint,
-            serverData.isBuilt ? 1 : 0,
-            serverData.status
-          ], function(err) {
-            if (err) {
-              console.error('Error creating server:', err);
-              reject(err);
-              return;
-            }
-            
-            // Insert logs if provided
-            if (serverData.logs && serverData.logs.length > 0) {
-              DatabaseStorage.prototype.addLogs(serverId, serverData.logs)
-                .then(() => resolve())
-                .catch(reject);
-            } else {
-              resolve();
-            }
-          });
+        resolve({ ...serverData, id: serverId });
+      });
+    });
+  }
+  
+  // Update server
+  async updateServer(serverId, serverData) {
+    return new Promise((resolve, reject) => {
+      const updateSql = `
+        UPDATE servers SET
+          name = ?,
+          git_url = ?,
+          directory_path = ?,
+          data_path = ?,
+          logs_path = ?,
+          project_type = ?,
+          config = ?,
+          env_vars = ?,
+          run_command = ?,
+          entry_point = ?,
+          is_built = ?,
+          status = ?,
+          updated_at = CURRENT_TIMESTAMP
+        WHERE id = ?
+      `;
+      
+      this.db.run(updateSql, [
+        serverData.name,
+        serverData.gitUrl,
+        serverData.dir,
+        serverData.dataDir,
+        serverData.logsDir,
+        serverData.projectType,
+        JSON.stringify(serverData.config || {}),
+        JSON.stringify(serverData.env || {}),
+        serverData.runCommand,
+        serverData.entryPoint,
+        serverData.isBuilt ? 1 : 0,
+        serverData.status,
+        serverId
+      ], function(err) {
+        if (err) {
+          console.error('Error updating server:', err);
+          reject(err);
+          return;
         }
+        resolve();
       });
     });
   }

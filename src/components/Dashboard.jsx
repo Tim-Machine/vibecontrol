@@ -10,7 +10,7 @@ import ConfigEditor from './ConfigEditor';
 import LogViewer from './LogViewer';
 import ConsolidatedLogViewer from './ConsolidatedLogViewer';
 import ProcessManager from './ProcessManager';
-import { Play, Square, Server, Layers, Settings, FileCode, Terminal, PlusCircle, Activity } from 'lucide-react';
+import { Play, Square, Server, Layers, Settings, FileCode, Terminal, PlusCircle, Activity, Plus } from 'lucide-react';
 
 export default function Dashboard({ servers, setServers, hasApi = true }) {
   const [selectedServer, setSelectedServer] = useState(null);
@@ -369,6 +369,10 @@ export default function Dashboard({ servers, setServers, hasApi = true }) {
     setActiveView('server-logs');
   };
   
+  const openAddServerDialog = () => {
+    setActiveView('add-server');
+  };
+  
   return (
     <div className="flex flex-col h-screen overflow-hidden bg-gradient-to-br from-background via-background/95 to-accent/5">
       {/* Application Layout */}
@@ -426,15 +430,15 @@ export default function Dashboard({ servers, setServers, hasApi = true }) {
           
           <div className="border-t border-border/50 p-4 flex-shrink-0">
             <Button 
-              onClick={() => setActiveView('add-server')} 
+              onClick={openAddServerDialog} 
               size="sm" 
               className="w-full flex items-center justify-center bg-primary/80 hover:bg-primary transition-all duration-300 group glow-border"
             >
               <div className="relative">
-                <PlusCircle className="h-4 w-4 mr-2" />
+                <Plus className="h-4 w-4 mr-2" />
                 <div className="absolute -inset-2 bg-primary/20 rounded-full blur-md opacity-0 group-hover:opacity-100 transition-opacity"></div>
               </div>
-              Add MCP Server
+              Add Server
             </Button>
           </div>
         </div>
@@ -573,13 +577,13 @@ export default function Dashboard({ servers, setServers, hasApi = true }) {
                           <div className="absolute -inset-4 bg-primary/5 rounded-full blur-xl animate-pulse"></div>
                         </div>
                         <h2 className="text-xl font-semibold mb-2 bg-gradient-to-r from-primary to-primary-foreground bg-clip-text text-transparent">
-                          No MCP Servers
+                          No Servers
                         </h2>
                         <p className="text-muted-foreground mb-6 opacity-70">
-                          Add your first MCP server to start managing and monitoring it.
+                          Add your first server to start managing and monitoring it.
                         </p>
                         <Button 
-                          onClick={() => setActiveView('add-server')} 
+                          onClick={openAddServerDialog} 
                           className="mx-auto bg-primary/80 hover:bg-primary transition-all duration-300 group"
                         >
                           <div className="relative">
@@ -613,7 +617,7 @@ export default function Dashboard({ servers, setServers, hasApi = true }) {
                     <CardHeader className="pb-2">
                       <CardTitle>Unified Logs</CardTitle>
                       <CardDescription>
-                        View real-time logs from all running MCP servers
+                        View real-time logs from all running servers
                       </CardDescription>
                     </CardHeader>
                     <CardContent className="p-0 h-[calc(100%-80px)]">
@@ -651,7 +655,7 @@ export default function Dashboard({ servers, setServers, hasApi = true }) {
                         <CardHeader className="pb-2">
                           <CardTitle>{selectedServer.name} Configuration</CardTitle>
                           <CardDescription>
-                            Configure MCP-specific settings and environment variables
+                            Configure server settings and environment variables
                           </CardDescription>
                         </CardHeader>
                         <CardContent>

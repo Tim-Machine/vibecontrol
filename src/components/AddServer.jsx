@@ -13,6 +13,7 @@ export default function AddServer({ onAddServer }) {
   const [gitUrl, setGitUrl] = useState('');
   const [customName, setCustomName] = useState('');
   const [runCommand, setRunCommand] = useState('');
+  const [buildCommand, setBuildCommand] = useState('');
   const [entryPoint, setEntryPoint] = useState('');
   const [activeTab, setActiveTab] = useState('basic');
   const [envVars, setEnvVars] = useState([{ key: '', value: '' }]);
@@ -33,6 +34,7 @@ export default function AddServer({ onAddServer }) {
       name: customName || undefined,
       runCommand: runCommand || undefined,
       entryPoint: entryPoint || undefined,
+      buildCommand: buildCommand || undefined,
       env: Object.keys(env).length > 0 ? env : undefined
     };
     
@@ -42,6 +44,7 @@ export default function AddServer({ onAddServer }) {
     setGitUrl('');
     setCustomName('');
     setRunCommand('');
+    setBuildCommand('');
     setEntryPoint('');
     setEnvVars([{ key: '', value: '' }]);
     setActiveTab('basic');
@@ -67,7 +70,7 @@ export default function AddServer({ onAddServer }) {
       <div className="max-w-2xl mx-auto space-y-8">
         <div className="space-y-2">
           <h2 className="text-2xl font-semibold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent glow">
-            Add MCP Server
+            Add Server
           </h2>
           <p className="text-muted-foreground">
             Configure a new server for your project. Fill in the details below to get started.
@@ -89,23 +92,14 @@ export default function AddServer({ onAddServer }) {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="dir">Project Directory</Label>
-                <div className="flex gap-2">
-                  <Input
-                    id="dir"
-                    placeholder="Select project directory"
-                    value={gitUrl}
-                    onChange={(e) => setGitUrl(e.target.value)}
-                    className="flex-1 bg-card/50 border-border/50 focus:border-primary/50 focus:ring-primary/20 transition-all duration-300 backdrop-blur-sm"
-                  />
-                  <Button
-                    variant="outline"
-                    onClick={() => {}}
-                    className="border-border/50 hover:bg-primary/20 transition-all duration-300 glow-border"
-                  >
-                    Browse
-                  </Button>
-                </div>
+                <Label htmlFor="gitUrl">Git Repository URL</Label>
+                <Input
+                  id="gitUrl"
+                  placeholder="e.g., https://github.com/user/repo.git"
+                  value={gitUrl}
+                  onChange={(e) => setGitUrl(e.target.value)}
+                  className="bg-card/50 border-border/50 focus:border-primary/50 focus:ring-primary/20 transition-all duration-300 backdrop-blur-sm"
+                />
               </div>
 
               <div className="space-y-2">
@@ -119,18 +113,6 @@ export default function AddServer({ onAddServer }) {
                     <SelectItem value="python" className="hover:bg-primary/20 transition-colors duration-300">Python</SelectItem>
                   </SelectContent>
                 </Select>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="port">Port Number</Label>
-                <Input
-                  id="port"
-                  type="number"
-                  placeholder="Enter port number"
-                  value={8080}
-                  onChange={(e) => {}}
-                  className="bg-card/50 border-border/50 focus:border-primary/50 focus:ring-primary/20 transition-all duration-300 backdrop-blur-sm"
-                />
               </div>
 
               <div className="space-y-2">
@@ -174,8 +156,8 @@ export default function AddServer({ onAddServer }) {
                     <Input
                       id="buildCommand"
                       placeholder="e.g., npm install, pip install -r requirements.txt"
-                      value={''}
-                      onChange={(e) => {}}
+                      value={buildCommand}
+                      onChange={(e) => setBuildCommand(e.target.value)}
                       className="bg-card/50 border-border/50 focus:border-primary/50 focus:ring-primary/20 transition-all duration-300 backdrop-blur-sm"
                     />
                   </div>

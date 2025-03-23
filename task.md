@@ -1,5 +1,5 @@
 ## fix install path
-
+- when cloning a repo, the install path should be the same as the repo name
 - Server installation path should follow the format: {base}/.vibe-control/{repo-name}
   - {base} should default to the user's home directory
   - {repo-name} should be the name of the git repository being cloned
@@ -10,7 +10,7 @@
   - Data path: {base}/.vibe-control/{repo-name}/data
   - Log path: {base}/.vibe-control/{repo-name}/logs
 
-## update server list
+## update sidebar server list
 
 - the server list should be updated to show the server name, version,
 - the server list should be sorted by the server name
@@ -18,6 +18,7 @@
 - the server list should be filterable
 - add ui buttons for configuration and logs
 - remove the the logs and configuration buttons from the top nav
+- fix status indicator it's not currently working
 
 # Refactor UI Components
 

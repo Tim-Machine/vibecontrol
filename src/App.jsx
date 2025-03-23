@@ -97,7 +97,7 @@ function App() {
             <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
             <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
           </svg>
-          Loading MCP Server Manager...
+          Loading VibeControl...
         </div>
       </div>
     );
@@ -132,7 +132,7 @@ function App() {
           <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2 text-primary glow" viewBox="0 0 20 20" fill="currentColor">
             <path fillRule="evenodd" d="M2 5a2 2 0 012-2h12a2 2 0 012 2v10a2 2 0 01-2 2H4a2 2 0 01-2-2V5zm3.293 1.293a1 1 0 011.414 0l3 3a1 1 0 010 1.414l-3 3a1 1 0 01-1.414-1.414L7.586 10 5.293 7.707a1 1 0 010-1.414zM11 12a1 1 0 100 2h3a1 1 0 100-2h-3z" clipRule="evenodd" />
           </svg>
-          <span className="font-medium glow">MCP Server Manager</span>
+          <span className="font-medium glow">VibeControl</span>
         </div>
         <div className="text-muted-foreground flex space-x-4">
           <div className="flex items-center">

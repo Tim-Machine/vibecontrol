@@ -1,5 +1,6 @@
 const path = require('path');
-const fs = require('fs');
+const os = require('os');
+const fs = require('fs').promises;
 const { EventEmitter } = require('events');
 const { v4: uuidv4 } = require('uuid');
 const { exec } = require('child_process');
@@ -11,12 +12,16 @@ const GitCloner = require('./clone');
 const ProjectDetector = require('./detect');
 const DependencyInstaller = require('./install');
 const ProcessManager = require('./process');
+const { getRepoName } = require('../utils/git');
 
 class ServerManager extends EventEmitter {
   constructor(storage, options = {}) {
     super();
     this.storage = storage;
-    this.serversDir = options.serversDir || path.join(process.cwd(), 'servers');
+    this.processes = new Map();
+    this.baseDir = options.baseDir || os.homedir();
+    this.vibeControlDir = path.join(this.baseDir, '.vibe-control');
+    this.ensureDirectories();
     
     // Initialize storage and load servers
     this.initializeStorage();
@@ -72,11 +77,23 @@ class ServerManager extends EventEmitter {
         }
       }
     });
-    
-    // Create servers directory if it doesn't exist
-    if (!fs.existsSync(this.serversDir)) {
-      fs.mkdirSync(this.serversDir, { recursive: true });
+  }
+  
+  async ensureDirectories() {
+    try {
+      await fs.mkdir(this.vibeControlDir, { recursive: true });
+    } catch (error) {
+      console.error('Error creating .vibe-control directory:', error);
     }
+  }
+  
+  getServerPaths(repoName) {
+    const serverDir = path.join(this.vibeControlDir, repoName);
+    return {
+      installPath: serverDir,
+      dataPath: path.join(serverDir, 'data'),
+      logsPath: path.join(serverDir, 'logs')
+    };
   }
   
   async initializeStorage() {
@@ -91,50 +108,63 @@ class ServerManager extends EventEmitter {
   
   async addServer(gitUrl, customConfig = {}) {
     try {
-      // Generate unique ID for server
-      const serverId = uuidv4();
+      const repoName = await getRepoName(gitUrl);
+      const paths = this.getServerPaths(repoName);
       
-      // Extract the repository name from the URL
-      const repoName = path.basename(gitUrl, '.git');
-      
-      // Create server directory using repo name plus UUID for uniqueness
-      // This ensures the repo's internal name is preserved while still allowing multiple instances
-      const serverDirName = `${repoName}-${serverId.substring(0, 8)}`;
-      const serverDir = path.join(this.serversDir, serverDirName);
-      
-      // Ensure the parent directory exists
-      fs.mkdirSync(this.serversDir, { recursive: true });
-      
-      console.log(`Adding new server with ID ${serverId} at path: ${serverDir}`);
-      
-      // Clone repository
-      await this.gitCloner.clone(gitUrl, serverDir);
-      
+      // Check if directory exists and remove it if it does
+      try {
+        const stats = await fs.stat(paths.installPath);
+        if (stats.isDirectory()) {
+          console.log(`Removing existing directory: ${paths.installPath}`);
+          await fs.rm(paths.installPath, { recursive: true, force: true });
+        }
+      } catch (err) {
+        // Directory doesn't exist, which is fine
+      }
+
+      // Create server directories
+      await fs.mkdir(paths.installPath, { recursive: true });
+      await fs.mkdir(paths.dataPath, { recursive: true });
+      await fs.mkdir(paths.logsPath, { recursive: true });
+
+      // Clone the repository
+      await this.gitCloner.clone(gitUrl, paths.installPath);
+
       // Detect project type
-      const projectType = await this.projectDetector.detect(serverDir);
-      
+      const projectType = await this.projectDetector.detect(paths.installPath);
+
       // Install dependencies
-      await this.dependencyInstaller.install(serverDir, projectType);
-      
-      // Create server object
-      const server = {
-        id: serverId,
+      await this.dependencyInstaller.install(paths.installPath, projectType);
+
+      // Prepare server data with name fallback
+      const serverData = {
+        ...customConfig, // Spread custom config first
         gitUrl,
-        dir: serverDir,
+        dir: paths.installPath,
+        dataDir: paths.dataPath,
+        logsDir: paths.logsPath,
         projectType,
-        name: customConfig.name || repoName,
-        config: customConfig.config || {},
-        env: customConfig.env || {}, // Custom environment variables
-        runCommand: customConfig.runCommand || null, // Optional custom command to run the server
-        entryPoint: customConfig.entryPoint || null, // Optional custom entry point file
-        isBuilt: false, // Track if the project has been built
-        status: 'stopped'
+        name: customConfig.name || repoName, // Override name last to ensure it's set
+        status: 'stopped',
+        isBuilt: false
       };
-      
-      // Save server to storage
-      this.servers[serverId] = server;
-      await this.storage.updateServer(serverId, server);
-      
+
+      // Add server to database with paths
+      const server = await this.storage.addServer(serverData);
+
+      // Add the server to our internal state
+      this.servers[server.id] = server;
+
+      // Start the server if a run command was provided
+      if (server.runCommand) {
+        try {
+          await this.startServer(server.id);
+        } catch (error) {
+          console.error('Error starting server:', error);
+          // Don't throw here - we still want to return the server object
+        }
+      }
+
       return server;
     } catch (error) {
       console.error('Error adding server:', error);

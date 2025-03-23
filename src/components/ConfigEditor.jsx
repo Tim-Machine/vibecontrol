@@ -204,8 +204,8 @@ export default function ConfigEditor({ serverId, config, onUpdateConfig, server,
 
       <Card>
         <CardHeader>
-          <CardTitle>MCP Configuration</CardTitle>
-          <CardDescription>Configure MCP-specific settings for your server</CardDescription>
+          <CardTitle>Configuration</CardTitle>
+          <CardDescription>Configure server settings and environment variables</CardDescription>
         </CardHeader>
         <CardContent>
           <Tabs defaultValue="config" className="w-full">
