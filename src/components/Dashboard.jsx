@@ -178,68 +178,34 @@ export default function Dashboard({ servers, setServers, hasApi = true }) {
   };
   
   const handleUpdateConfig = async (serverId, config) => {
-    const toastId = toast.loading('Updating configuration...', {
-      duration: Infinity,
-      dismissible: true,
-      className: 'bg-card/80 backdrop-blur-sm border border-white/10'
-    });
+    console.log('Updating config:', { serverId, config }); // Debug log
+    const toastId = toast.loading('Updating configuration...');
     
     try {
-      // Extract environment variables and server settings from config object
-      const { env, name, runCommand, entryPoint, ...mpcConfig } = config;
-      
       if (hasApi) {
         await window.api.updateConfig(serverId, config);
-        toast.success('Configuration updated successfully', {
-          id: toastId,
-          duration: 3000,
-          dismissible: true,
-          className: 'bg-card/80 backdrop-blur-sm border border-white/10'
-        });
-      } else {
-        // Mock implementation
-        setTimeout(() => {
-          toast.success('Configuration updated successfully (MOCK)', {
-            id: toastId,
-            duration: 3000,
-            dismissible: true,
-            className: 'bg-card/80 backdrop-blur-sm border border-white/10'
-          });
-        }, 1000);
-      }
-      
-      // Update server with config, env, and server settings
-      setServers(prev => prev.map(server => {
-        if (server.id === serverId) {
-          return { 
-            ...server, 
-            config: mpcConfig,
-            env: env || {},
-            name: name || server.name,
-            runCommand: runCommand !== undefined ? runCommand : server.runCommand,
-            entryPoint: entryPoint !== undefined ? entryPoint : server.entryPoint
-          };
-        }
-        return server;
-      }));
-      
-      // Update selected server if it's the one being modified
-      if (selectedServer && selectedServer.id === serverId) {
-        setSelectedServer(prev => ({
-          ...prev,
-          name: name || prev.name,
-          runCommand: runCommand !== undefined ? runCommand : prev.runCommand,
-          entryPoint: entryPoint !== undefined ? entryPoint : prev.entryPoint
+        
+        // Update local state
+        setServers(prev => prev.map(server => {
+          if (server.id === serverId) {
+            return { 
+              ...server, 
+              config: config,
+              env: config.env || {},
+              name: config.name || server.name,
+              runCommand: config.runCommand !== undefined ? config.runCommand : server.runCommand,
+              entryPoint: config.entryPoint !== undefined ? config.entryPoint : server.entryPoint,
+              commandArgs: config.commandArgs || []
+            };
+          }
+          return server;
         }));
+
+        toast.success('Configuration updated successfully', { id: toastId });
       }
     } catch (error) {
-      console.error('Error updating configuration:', error);
-      toast.error(`Failed to update configuration: ${error?.message || 'Unknown error'}`, {
-        id: toastId,
-        duration: 5000,
-        dismissible: true,
-        className: 'bg-card/80 backdrop-blur-sm border border-white/10'
-      });
+      console.error('Error updating config:', error);
+      toast.error(`Failed to update configuration: ${error.message}`, { id: toastId });
     }
   };
   

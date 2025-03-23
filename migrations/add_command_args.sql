@@ -1,0 +1,1 @@
+ALTER TABLE servers ADD COLUMN command_args TEXT DEFAULT '[]'; 

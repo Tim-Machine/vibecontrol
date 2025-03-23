@@ -58,6 +58,7 @@ debug.log
 # Electron specific
 out/
 mcp-servers/
+electron/
 
 # System specific
 Thumbs.db
