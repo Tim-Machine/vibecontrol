@@ -1,7 +1,7 @@
 {
   "name": "vibecontrol",
   "version": "1.0.0",
-  "description": "VibeControl - Server Management Made Beautiful",
+  "description": "VibeControl - MCP Server Management Made Beautiful",
   "type": "commonjs",
   "main": "electron/main.js",
   "scripts": {

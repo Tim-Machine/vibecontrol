@@ -364,6 +364,18 @@ export default function Dashboard({ servers, setServers, hasApi = true }) {
     }
   };
   
+  const handleViewLogs = (serverId) => {
+    const server = servers.find(s => s.id === serverId);
+    setSelectedServer(server);
+    setActiveView('server-logs');
+  };
+
+  const handleViewConfig = (serverId) => {
+    const server = servers.find(s => s.id === serverId);
+    setSelectedServer(server);
+    setActiveView('config');
+  };
+  
   const selectServer = (server) => {
     setSelectedServer(server);
     setActiveView('server-logs');
@@ -424,6 +436,8 @@ export default function Dashboard({ servers, setServers, hasApi = true }) {
                 onStopServer={handleStopServer} 
                 onDeleteServer={handleDeleteServer}
                 onRebuildServer={handleRebuildServer}
+                onViewLogs={handleViewLogs}
+                onViewConfig={handleViewConfig}
               />
             </div>
           </div>
@@ -462,18 +476,6 @@ export default function Dashboard({ servers, setServers, hasApi = true }) {
                       <Activity className="h-4 w-4" />
                       Processes
                     </TabsTrigger>
-                    {selectedServer && (
-                      <>
-                        <TabsTrigger value="server-logs" className="flex items-center gap-2 data-[state=active]:bg-primary/20 transition-all duration-300">
-                          <Terminal className="h-4 w-4" />
-                          Server Logs
-                        </TabsTrigger>
-                        <TabsTrigger value="config" className="flex items-center gap-2 data-[state=active]:bg-primary/20 transition-all duration-300">
-                          <Settings className="h-4 w-4" />
-                          Configuration
-                        </TabsTrigger>
-                      </>
-                    )}
                   </TabsList>
                 </div>
               </Tabs>
