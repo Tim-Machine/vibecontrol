@@ -1,0 +1,76 @@
+{
+  "name": "mcp-server-manager",
+  "version": "1.0.0",
+  "description": "MCP Server Manager",
+  "type": "commonjs",
+  "main": "electron/main.js",
+  "scripts": {
+    "start": "electron .",
+    "dev": "concurrently \"vite\" \"wait-on http://localhost:5173 && electron .\"",
+    "build": "vite build && electron-builder",
+    "postinstall": "electron-builder install-app-deps"
+  },
+  "keywords": [
+    "mcp",
+    "server",
+    "manager",
+    "electron",
+    "react"
+  ],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@radix-ui/react-alert-dialog": "^1.1.6",
+    "@radix-ui/react-dialog": "^1.1.6",
+    "@radix-ui/react-dropdown-menu": "^2.1.6",
+    "@radix-ui/react-hover-card": "^1.1.6",
+    "@radix-ui/react-label": "^2.1.2",
+    "@radix-ui/react-scroll-area": "^1.2.3",
+    "@radix-ui/react-select": "^2.1.6",
+    "@radix-ui/react-slot": "^1.1.2",
+    "@radix-ui/react-switch": "^1.1.3",
+    "@radix-ui/react-tabs": "^1.1.3",
+    "ansi-to-html": "^0.7.2",
+    "class-variance-authority": "^0.7.1",
+    "clsx": "^2.1.1",
+    "electron-store": "^10.0.1",
+    "find-process": "^1.4.10",
+    "lucide-react": "^0.483.0",
+    "ps-list": "^8.1.1",
+    "react": "18.2.0",
+    "react-dom": "18.2.0",
+    "react-hot-toast": "^2.5.2",
+    "react-json-editor-ajrm": "^2.5.14",
+    "simple-git": "^3.27.0",
+    "sonner": "^2.0.1",
+    "sqlite3": "^5.1.7",
+    "tailwind-merge": "^3.0.2",
+    "uuid": "^11.1.0"
+  },
+  "devDependencies": {
+    "@shadcn/ui": "^0.0.4",
+    "@tailwindcss/postcss": "^4.0.15",
+    "@vitejs/plugin-react": "^4.3.4",
+    "autoprefixer": "^10.4.14",
+    "concurrently": "^9.1.2",
+    "electron": "^35.0.3",
+    "electron-builder": "^25.1.8",
+    "postcss": "^8.4.24",
+    "tailwindcss": "^3.3.3",
+    "tailwindcss-animate": "^1.0.7",
+    "vite": "^6.2.2",
+    "wait-on": "^8.0.3"
+  },
+  "build": {
+    "appId": "com.mcp.servermanager",
+    "productName": "MCP Server Manager",
+    "files": [
+      "dist/**/*",
+      "electron/**/*"
+    ],
+    "directories": {
+      "buildResources": "public",
+      "output": "release"
+    }
+  }
+}
